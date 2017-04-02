@@ -7,9 +7,9 @@ instance Show Player where
     show Red = " R"
     show Black = " B"
 
-data Move =  Jump Square Square | March Square Square
+data Move =  Jump Square Square | March Square Square deriving (Show)
 
-data Square = Square Int Int
+data Square = Square Int Int deriving (Show)
 
 instance Ord Square where
 	(Square a b) <= (Square c d) = a < c || (a == c && b <= d)
@@ -37,7 +37,7 @@ instance Show Piece where
     show Empty = "   "
     show (Piece player piecetype) = show player ++ show piecetype
 
-data BoardMap = BoardMap (Map Square Piece)
+data BoardMap = BoardMap (Map Square Piece) -- deriving (Show)
 
 class Board board where
     seekBoard :: board -> Square -> Piece
@@ -45,6 +45,7 @@ class Board board where
     addPiece :: board -> Square -> Piece -> board
     replacePiece :: board -> Square -> Piece -> board
     validMoves :: board -> Player -> [Move]
+    playMove :: board -> Move -> board
 
 instance Board BoardMap where
     seekBoard = mSeekBoard
@@ -52,23 +53,40 @@ instance Board BoardMap where
     addPiece = mAddPiece
     replacePiece = mReplacePiece
     validMoves = mValidMoves
+    playMove = mPlayMove
 
---member fns --------------------------------------------------------------
+-- member funs for actual moves --------------------------------------------------------
+
+mPlayMove :: BoardMap -> Move -> BoardMap
+mPlayMove board (Jump s1@(Square x1 y1) s2@(Square x2 y2)) | x2 /= 8 && x2/= 1 = replacePiece (replacePiece (replacePiece board s2 (seekBoard board s1)) s1 Empty) (Square (quot (x1+x2) 2) (quot (y1+y2) 2)) Empty
+                                                           | otherwise = replacePiece (replacePiece (replacePiece board s2 (promote $ seekBoard board s1)) s1 Empty) (Square (quot (x1+x2) 2) (quot (y1+y2) 2)) Empty
+mPlayMove board (March s1@(Square x1 y1) s2@(Square x2 y2)) | x2 /= 8 && x2/= 1 = replacePiece (replacePiece board s2 (seekBoard board s1)) s1 Empty
+                                                            | otherwise = replacePiece (replacePiece board s2 (promote (seekBoard board s1))) s1 Empty
+
+promote :: Piece -> Piece
+promote (Piece pl ty) = Piece pl King
+promote Empty = Empty
+
+--member fns  for valid moves--------------------------------------------------------------
 mValidMoves :: BoardMap -> Player -> [Move]
-mValidMoves (BoardMap b) pl = []
+mValidMoves b pl | length jumpsList > 0 = jumpsList
+                 | otherwise = marchList
+                 where jumpsList = List.foldr (++) [] (List.map (mValidJumps b) (mPlayableSquares b pl))
+                       marchList = List.foldr (++) [] (List.map (mValidMarches b) (mPlayableSquares b pl))
 
 mPlayableSquares :: BoardMap -> Player -> [(Square, Piece)]
 mPlayableSquares (BoardMap b) pl = List.filter (isSamePlayer pl) (toList b)
 
 isSamePlayer :: Player -> (Square, Piece) -> Bool
 isSamePlayer p (_, Piece p2 _) = p == p2
+isSamePlayer p (_,Empty) = False
 
 mValidJumps :: BoardMap -> (Square, Piece) -> [Move]
 mValidJumps b (s@(Square x y), piece@(Piece player ptype)) | player == Black && ptype == Pawn && y >= 3 = validJumpsBlackPawn b s
-                                                                      | player == Black && ptype == King = validJumpsBlackKing b s
-                                                                      | player == Red && ptype == Pawn && y <= 6 = validJumpsRedPawn b s
-                                                                      | player == Red && ptype == King = validJumpsRedKing b s
-                                                                      | otherwise = []
+                                                           | player == Black && ptype == King = validJumpsBlackKing b s
+                                                           | player == Red && ptype == Pawn && y <= 6 = validJumpsRedPawn b s
+                                                           | player == Red && ptype == King = validJumpsRedKing b s
+                                                           | otherwise = []
 
 validJumpsBlackPawn :: BoardMap -> Square -> [Move]
 validJumpsBlackPawn board s@(Square x y) = [Jump (Square x y) (Square a b) | (a, b) <- [(x-2, y-2), (x+2, y-2)], seekBoard board (Square a b) == Empty, isRed $ seekBoard board (Square (quot (a+x) 2) (quot (b+y) 2))]
@@ -81,6 +99,21 @@ validJumpsBlackKing board s@(Square x y) = [Jump (Square x y) (Square a b) | a <
 
 validJumpsRedKing :: BoardMap -> Square -> [Move]
 validJumpsRedKing board s@(Square x y) = [Jump (Square x y) (Square a b) | a <- [x-2, x+2], b <- [y-2, y+2], a >= 1 && a <= 8 && b >= 1 && b <= 8, seekBoard board (Square a b) == Empty, isBlack $ seekBoard board (Square (quot (a+x) 2) (quot (b+y) 2))]
+
+mValidMarches :: BoardMap -> (Square, Piece) -> [Move]
+mValidMarches b (s@(Square x y), piece@(Piece player ptype)) | player == Black && ptype == Pawn && y >= 2 = validMarchesBlackPawn b s
+                                                             | ptype == King = validMarchesKing b s
+                                                             | player == Red && ptype == Pawn && y <= 7 = validMarchesRedPawn b s
+                                                             | otherwise = []
+
+validMarchesKing :: BoardMap -> Square -> [Move]
+validMarchesKing board s@(Square x y) = [March (Square x y) (Square a b) | a <- [x-1, x+1], b <- [y-1, y+1], a >= 1 && a <= 8 && b >= 1 && b <= 8, seekBoard board (Square a b) == Empty]
+
+validMarchesBlackPawn :: BoardMap -> Square -> [Move]
+validMarchesBlackPawn board s@(Square x y) = [March (Square x y) (Square a b) | (a, b) <- [(x-1, y-1), (x+1, y-1)], a >= 1 && a <= 8 && b >= 1 && b <= 8, seekBoard board (Square a b) == Empty]
+
+validMarchesRedPawn :: BoardMap -> Square -> [Move]
+validMarchesRedPawn board s@(Square x y) = [March (Square x y) (Square a b) | (a, b) <- [(x-1, y+1), (x+1, y+1)], a >= 1 && a <= 8 && b >= 1 && b <= 8, seekBoard board (Square a b) == Empty]
 
 mSeekBoard :: BoardMap -> Square -> Piece
 mSeekBoard (BoardMap b) sq = case Map.lookup sq b of
@@ -106,8 +139,8 @@ addPieces (BoardMap m) [] = (BoardMap m)
 addPieces (BoardMap m) (x:xs) = addPieces (addPiece (BoardMap m) x $ initialPieceAtSquare x) xs
 
 initialPieceAtSquare :: Square -> Piece
-initialPieceAtSquare (Square x y) | x <= 3 = (Piece Red Pawn)
-                                  | x >= 6 = (Piece Black Pawn)
+initialPieceAtSquare (Square x y) | y <= 3 = (Piece Red Pawn)
+                                  | y >= 6 = (Piece Black Pawn)
                                   | otherwise = Empty
 
 -- Show for Board -----------------------------------------------------
@@ -139,3 +172,8 @@ main = do
     let s = startGame
     putStrLn "Hello"
     putStrLn( show s)
+    --putStrLn( show )
+    putStrLn(show $ mPlayableSquares s Black)
+    putStrLn( show $ validMoves s Black)
+    putStrLn(show $ playMove ( playMove s $ March (Square 1 6) (Square 2 5)) $ March (Square 4 3) (Square 3 4))
+    putStrLn( show $ validMoves (playMove ( playMove s $ March (Square 1 6) (Square 2 5)) $ March (Square 4 3) (Square 3 4)) Black)
