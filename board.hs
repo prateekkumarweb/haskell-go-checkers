@@ -7,7 +7,18 @@ instance Show Player where
     show Red = " R"
     show Black = " B"
 
-data Move =  Jump Square Square | March Square Square deriving (Show)
+data Move =  Jump Square Square | March Square Square
+
+instance Show Move where
+    show Jump (Square x1 y1) (Square x2 y2) = " Jump (" ++ show x1 ++ ", " ++ show y1 ++ ") (" show x2 ++ ", " ++ show y2 ++ ") ""\n"
+    show March (Square x1 y1) (Square x2 y2) = " March (" ++ show x1 ++ ", " ++ show y1 ++ ") (" show x2 ++ ", " ++ show y2 ++ ") ""\n"
+
+isJump :: Move -> Bool
+isJump (Jump _ _ ) = True
+isJump (March _ _) = False
+
+getDestination :: Move -> Square
+getDestination (_ _ s) = s
 
 data Square = Square Int Int deriving (Show)
 
