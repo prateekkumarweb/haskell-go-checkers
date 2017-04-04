@@ -1,3 +1,15 @@
+module Board(
+    startGame,
+    Player(Red, Black),
+    BoardMap,
+    Move,
+    isJump,
+    Board(seekBoard, validMoves, playMove),
+    Square(Square),
+    getDestination,
+    mValidJumps
+) where
+
 import Data.Map as Map
 import Data.List as List
 
@@ -10,20 +22,21 @@ instance Show Player where
 data Move =  Jump Square Square | March Square Square
 
 instance Show Move where
-    show Jump (Square x1 y1) (Square x2 y2) = " Jump (" ++ show x1 ++ ", " ++ show y1 ++ ") (" show x2 ++ ", " ++ show y2 ++ ") ""\n"
-    show March (Square x1 y1) (Square x2 y2) = " March (" ++ show x1 ++ ", " ++ show y1 ++ ") (" show x2 ++ ", " ++ show y2 ++ ") ""\n"
+    show (Jump (Square x1 y1) (Square x2 y2)) = " Jump (" ++ show x1 ++ ", " ++ show y1 ++ ") (" ++ show x2 ++ ", " ++ show y2 ++ ")\n"
+    show (March (Square x1 y1) (Square x2 y2)) = " March (" ++ show x1 ++ ", " ++ show y1 ++ ") (" ++ show x2 ++ ", " ++ show y2 ++ ")\n"
 
 isJump :: Move -> Bool
 isJump (Jump _ _ ) = True
 isJump (March _ _) = False
 
 getDestination :: Move -> Square
-getDestination (_ _ s) = s
+getDestination (March _ s) = s
+getDestination (Jump _ s) = s
 
 data Square = Square Int Int deriving (Show)
 
 instance Ord Square where
-	(Square a b) <= (Square c d) = a < c || (a == c && b <= d)
+    (Square a b) <= (Square c d) = a < c || (a == c && b <= d)
 
 instance Eq Square where
     (Square a b) == (Square c d) = a == c && b == d
@@ -69,9 +82,9 @@ instance Board BoardMap where
 -- member funs for actual moves --------------------------------------------------------
 
 mPlayMove :: BoardMap -> Move -> BoardMap
-mPlayMove board (Jump s1@(Square x1 y1) s2@(Square x2 y2)) | x2 /= 8 && x2/= 1 = replacePiece (replacePiece (replacePiece board s2 (seekBoard board s1)) s1 Empty) (Square (quot (x1+x2) 2) (quot (y1+y2) 2)) Empty
+mPlayMove board (Jump s1@(Square x1 y1) s2@(Square x2 y2)) | y2 /= 8 && y2 /= 1 = replacePiece (replacePiece (replacePiece board s2 (seekBoard board s1)) s1 Empty) (Square (quot (x1+x2) 2) (quot (y1+y2) 2)) Empty
                                                            | otherwise = replacePiece (replacePiece (replacePiece board s2 (promote $ seekBoard board s1)) s1 Empty) (Square (quot (x1+x2) 2) (quot (y1+y2) 2)) Empty
-mPlayMove board (March s1@(Square x1 y1) s2@(Square x2 y2)) | x2 /= 8 && x2/= 1 = replacePiece (replacePiece board s2 (seekBoard board s1)) s1 Empty
+mPlayMove board (March s1@(Square x1 y1) s2@(Square x2 y2)) | y2 /= 8 && y2 /= 1 = replacePiece (replacePiece board s2 (seekBoard board s1)) s1 Empty
                                                             | otherwise = replacePiece (replacePiece board s2 (promote (seekBoard board s1))) s1 Empty
 
 promote :: Piece -> Piece
@@ -98,12 +111,13 @@ mValidJumps b (s@(Square x y), piece@(Piece player ptype)) | player == Black && 
                                                            | player == Red && ptype == Pawn && y <= 6 = validJumpsRedPawn b s
                                                            | player == Red && ptype == King = validJumpsRedKing b s
                                                            | otherwise = []
+mValidJumps _ (_, Empty) = []
 
 validJumpsBlackPawn :: BoardMap -> Square -> [Move]
-validJumpsBlackPawn board s@(Square x y) = [Jump (Square x y) (Square a b) | (a, b) <- [(x-2, y-2), (x+2, y-2)], seekBoard board (Square a b) == Empty, isRed $ seekBoard board (Square (quot (a+x) 2) (quot (b+y) 2))]
+validJumpsBlackPawn board s@(Square x y) = [Jump (Square x y) (Square a b) | (a, b) <- [(x-2, y-2), (x+2, y-2)], a >= 1 && a <= 8 && b >= 1 && b <= 8, seekBoard board (Square a b) == Empty, isRed $ seekBoard board (Square (quot (a+x) 2) (quot (b+y) 2))]
 
 validJumpsRedPawn :: BoardMap -> Square -> [Move]
-validJumpsRedPawn board s@(Square x y) = [Jump (Square x y) (Square a b) | (a, b) <- [(x-2, y+2), (x+2, y+2)], seekBoard board (Square a b) == Empty, isBlack $ seekBoard board (Square (quot (a+x) 2) (quot (b+y) 2))]
+validJumpsRedPawn board s@(Square x y) = [Jump (Square x y) (Square a b) | (a, b) <- [(x-2, y+2), (x+2, y+2)], a >= 1 && a <= 8 && b >= 1 && b <= 8, seekBoard board (Square a b) == Empty, isBlack $ seekBoard board (Square (quot (a+x) 2) (quot (b+y) 2))]
 
 validJumpsBlackKing :: BoardMap -> Square -> [Move]
 validJumpsBlackKing board s@(Square x y) = [Jump (Square x y) (Square a b) | a <- [x-2, x+2], b <- [y-2, y+2], a >= 1 && a <= 8 && b >= 1 && b <= 8, seekBoard board (Square a b) == Empty, isRed $ seekBoard board (Square (quot (a+x) 2) (quot (b+y) 2))]
@@ -142,8 +156,7 @@ mReplacePiece b sq piece = addPiece ( removePiece b sq) sq piece
 
 startGame :: BoardMap
 startGame = addPieces (BoardMap (Map.empty)) squares
-    where squares = [(Square x y) | x <- [1..8], y <- [1..8],
-		(mod x 2 == 0 && mod y 2 == 1) || (mod x 2 == 1 && mod y 2 == 0)]
+    where squares = [(Square x y) | x <- [1..8], y <- [1..8], (mod x 2 == 0 && mod y 2 == 1) || (mod x 2 == 1 && mod y 2 == 0)]
 
 addPieces :: BoardMap -> [Square] -> BoardMap
 addPieces (BoardMap m) [] = (BoardMap m)
@@ -156,7 +169,7 @@ initialPieceAtSquare (Square x y) | y <= 3 = (Piece Red Pawn)
 
 -- Show for Board -----------------------------------------------------
 instance Show BoardMap where
-	show = mBShow
+    show = mBShow
 
 mBShow :: BoardMap -> String
 mBShow (BoardMap squaresToPieces) = "   1  2  3  4  5  6  7  8\n" ++ showRows 1 (assocs squaresToPieces)
@@ -167,24 +180,24 @@ showRows rowNum rows = show rowNum ++ " " ++ (showRow $ (take 4 rows)) ++ (showR
 
 showRow :: [(Square, Piece)] -> [Char]
 showRow ((Square r c, piece):rest) = case mod r 2 of
-	0 -> rowStr ++ "___\n"
-	1 ->  "___" ++ rowStr ++ "\n"
-	where
-		rowStr = withEmptySpaces ((Square r c, piece):rest)
+    0 -> rowStr ++ "___\n"
+    1 ->  "___" ++ rowStr ++ "\n"
+    where
+        rowStr = withEmptySpaces ((Square r c, piece):rest)
 
 withEmptySpaces :: [(Square, Piece)] -> [Char]
 withEmptySpaces row = concat $ ((intersperse "___" (List.map show pieces)))
-	where
-		pieces = List.map snd row
+    where
+        pieces = List.map snd row
 
 
 
-main = do
-    let s = startGame
-    putStrLn "Hello"
-    putStrLn( show s)
-    --putStrLn( show )
-    putStrLn(show $ mPlayableSquares s Black)
-    putStrLn( show $ validMoves s Black)
-    putStrLn(show $ playMove ( playMove s $ March (Square 1 6) (Square 2 5)) $ March (Square 4 3) (Square 3 4))
-    putStrLn( show $ validMoves (playMove ( playMove s $ March (Square 1 6) (Square 2 5)) $ March (Square 4 3) (Square 3 4)) Black)
+-- main = do
+--     let s = startGame
+--     putStrLn "Hello"
+--     putStrLn( show s)
+--     --putStrLn( show )
+--     putStrLn(show $ mPlayableSquares s Black)
+--     putStrLn( show $ validMoves s Black)
+--     putStrLn(show $ playMove ( playMove s $ March (Square 1 6) (Square 2 5)) $ March (Square 4 3) (Square 3 4))
+--     putStrLn( show $ validMoves (playMove ( playMove s $ March (Square 1 6) (Square 2 5)) $ March (Square 4 3) (Square 3 4)) Black)
