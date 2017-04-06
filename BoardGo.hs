@@ -5,7 +5,8 @@ module BoardGo(
     validMove,
     getOppositeStone,
     Stone(Black, White),
-    Point(Point)
+    Point(Point),
+    findTrappedGroup
 ) where
 
 import Data.Map as Map
@@ -71,7 +72,6 @@ seekBoard (Game m _ _ _ _) p = case Map.lookup p m of
 findTrappedGroup :: Game -> Point -> Stone -> [Maybe Point] -> [Maybe Point]
 findTrappedGroup game@(Game m move@(Move pt st) boardSize _ _) point@(Point x y) stone seenPoints
     | x < 1 || x > boardSize || y < 1 || y > boardSize  = seenPoints
-    | seekBoard game point /= stone = [Nothing]
     | elem (pure point) seenPoints = seenPoints
     | seekBoard game point == Empty = Nothing:seenPoints
     | seekBoard game point == Ko = Nothing:seenPoints
@@ -93,7 +93,7 @@ getOppositeStone stone | stone == Black = White
 validMove :: Game -> Point -> Stone -> Bool
 validMove game@(Game m lm s _ _) p@(Point x y) st | x < 1 || x > s || y < 1 || y > 19 = False
     | seekBoard game p /= Empty = False
-    | not $ checkIfTrapped game p st = True
+    | not $ checkIfTrapped game1 p st = True
     | (seekBoard game up == ostone) && (checkIfTrapped game1 up ostone) = True
     | (seekBoard game down == ostone) && (checkIfTrapped game1 down ostone) = True
     | (seekBoard game left == ostone) && (checkIfTrapped game1 left ostone) = True
