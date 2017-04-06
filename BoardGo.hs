@@ -6,7 +6,9 @@ module BoardGo(
     getOppositeStone,
     Stone(Black, White),
     Point(Point),
-    findTrappedGroup
+    findTrappedGroup,
+    getBlackScore,
+    getWhiteScore
 ) where
 
 import Data.Map as Map
@@ -31,6 +33,12 @@ data Game = Game {
     scoreBlack :: Int,
     scoreWhite :: Int
 }
+
+getBlackScore :: Game -> Int
+getBlackScore (Game _ _ _ b _) = b
+
+getWhiteScore :: Game -> Int
+getWhiteScore (Game _ _ _ _ w) = w
 
 createGame :: Game
 createGame = Game{
@@ -72,8 +80,14 @@ removeGroups game point@(Point x y) stone = removeDead up stone $ removeDead dow
           left = Point (x-1) y
 
 removeDead :: Point -> Stone -> Game -> Game
-removeDead point stone game | checkIfTrapped game point stone = removeStones game (findTrappedGroup game point stone [])
+removeDead point stone game | checkIfTrapped game point stone = updateScore (removeStones game removablePoints) (length removablePoints) (getOppositeStone stone)
                             | otherwise = game
+                            where removablePoints = (findTrappedGroup game point stone [])
+
+updateScore :: Game -> Int -> Stone -> Game
+updateScore game@(Game m lm s b w) p st | st == Black = (Game m lm s (b+p) w)
+                                        | otherwise = (Game m lm s b (w+p))
+
 
 removeStones :: Game -> [Maybe Point] -> Game
 removeStones game@(Game m lm _ _ _) [] = game
