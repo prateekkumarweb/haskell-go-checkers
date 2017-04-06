@@ -56,13 +56,29 @@ addPieces m [] = m
 addPieces m (x:xs) = addPieces (Map.insert x Empty m) xs
 
 playMove :: Game -> Point -> Stone -> Game
-playMove game@(Game board lm s sb sw) point stone = Game {
+playMove game@(Game board lm s sb sw) point stone = removeGroups Game {
     board = addPiece board point stone,
     lastMove = Move point stone,
     boardSize = s,
     scoreBlack = sb,
     scoreWhite = sw
-}
+} point ostone where ostone = getOppositeStone stone
+
+removeGroups :: Game -> Point -> Stone -> Game
+removeGroups game point@(Point x y) stone = removeDead up stone $ removeDead down stone $ removeDead left stone $ removeDead right stone game
+    where up = Point x (y+1)
+          down = Point x (y-1)
+          right = Point (x+1) y
+          left = Point (x-1) y
+
+removeDead :: Point -> Stone -> Game -> Game
+removeDead point stone game | checkIfTrapped game point stone = removeStones game (findTrappedGroup game point stone [])
+                            | otherwise = game
+
+removeStones :: Game -> [Maybe Point] -> Game
+removeStones game@(Game m lm _ _ _) [] = game
+removeStones game@(Game m lm s b w) (Nothing:xs) = game
+removeStones game@(Game m lm s b w) ((Just p):xs) = removeStones (Game (removePiece m p) lm s b w) xs
 
 seekBoard :: Game -> Point -> Stone
 seekBoard (Game m _ _ _ _) p = case Map.lookup p m of
