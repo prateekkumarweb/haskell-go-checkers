@@ -77,9 +77,9 @@ findTrappedGroup game@(Game m move@(Move pt st) boardSize _ _) point@(Point x y)
     | seekBoard game point == Ko = Nothing:seenPoints
     | seekBoard game point /= stone = seenPoints
     | otherwise = findTrappedGroup game left stone
-    $ findTrappedGroup game right stone
-    $ findTrappedGroup game up stone
-    $ findTrappedGroup game down stone ((pure point):seenPoints)
+        $ findTrappedGroup game right stone
+        $ findTrappedGroup game up stone
+        $ findTrappedGroup game down stone ((pure point):seenPoints)
     where up = Point x (y+1)
           down = Point x (y-1)
           right = Point (x+1) y
@@ -106,14 +106,16 @@ validMove game@(Game m lm s _ _) p@(Point x y) st | x < 1 || x > s || y < 1 || y
           right = Point (x+1) y
           left = Point (x-1) y
 
-
 checkIfTrapped :: Game -> Point -> Stone -> Bool
-checkIfTrapped game p st | length (List.filter checkIfNothing (findTrappedGroup game p st [])) == 0 = True
-                         | otherwise = False
+checkIfTrapped game p st = not $ elem Nothing (findTrappedGroup game p st [])
 
-checkIfNothing :: Maybe Point -> Bool
+-- checkIfTrapped :: Game -> Point -> Stone -> Bool
+-- checkIfTrapped game p st | length (List.filter checkIfNothing (findTrappedGroup game p st [])) == 0 = True
+--                          | otherwise = False
+
+checkIfNothing :: (Maybe Point) -> Bool
 checkIfNothing Nothing = True
-checkIfNothing point = False
+checkIfNothing (Just point) = False
 
 instance Show Game where
   show = mBShow

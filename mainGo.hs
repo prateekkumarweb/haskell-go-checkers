@@ -8,6 +8,7 @@ main = do
 playTurn :: Game -> Stone -> IO()
 playTurn game stone = do
     putStrLn $ show game
+    putStrLn $ show stone
     moveX <- getLine
     moveY <- getLine
     let x = read moveX
