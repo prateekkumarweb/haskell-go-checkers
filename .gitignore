@@ -20,5 +20,6 @@ cabal.project.local
 
 main
 board
+BoardGo
 test*
 *~

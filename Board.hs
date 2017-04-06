@@ -189,15 +189,3 @@ withEmptySpaces :: [(Square, Piece)] -> [Char]
 withEmptySpaces row = concat $ ((intersperse "___" (List.map show pieces)))
     where
         pieces = List.map snd row
-
-
-
--- main = do
---     let s = startGame
---     putStrLn "Hello"
---     putStrLn( show s)
---     --putStrLn( show )
---     putStrLn(show $ mPlayableSquares s Black)
---     putStrLn( show $ validMoves s Black)
---     putStrLn(show $ playMove ( playMove s $ March (Square 1 6) (Square 2 5)) $ March (Square 4 3) (Square 3 4))
---     putStrLn( show $ validMoves (playMove ( playMove s $ March (Square 1 6) (Square 2 5)) $ March (Square 4 3) (Square 3 4)) Black)
