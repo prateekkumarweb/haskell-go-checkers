@@ -2,8 +2,11 @@ module BoardGo(
     createGame,
     Game(board),
     playMove,
-    validMove
-)
+    validMove,
+    getOppositeStone,
+    Stone(Black, White),
+    Point(Point)
+) where
 
 import Data.Map as Map
 import Data.List as List
