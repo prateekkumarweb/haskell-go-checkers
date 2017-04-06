@@ -16,5 +16,5 @@ playTurn game stone = do
     let x = read moveX
     let y = read moveY
     let isValidMove = validMove game (Point x y) stone
-    if isValidMove then playTurn (playMove game (Point x y) stone) (getOppositeStone stone)
+    if isValidMove then playTurn (playMove (removeKo game) (Point x y) stone) (getOppositeStone stone)
         else playTurn game stone

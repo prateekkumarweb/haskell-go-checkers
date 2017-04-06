@@ -8,7 +8,8 @@ module BoardGo(
     Point(Point),
     findTrappedGroup,
     getBlackScore,
-    getWhiteScore
+    getWhiteScore,
+    removeKo
 ) where
 
 import Data.Map as Map
@@ -49,6 +50,13 @@ createGame = Game{
     scoreWhite = 0
 }
 
+removeKo :: Game -> Game
+removeKo game@(Game m lm s b w) = (Game (removeKoFromMap (List.filter (\(p, s) -> s == Ko) (assocs m)) m) lm s b w)
+
+removeKoFromMap :: [(Point, Stone)] -> (Map Point Stone) -> (Map Point Stone)
+removeKoFromMap [] m = m
+removeKoFromMap ((p,s):xs) m = addPiece m p Empty
+
 addPiece :: (Map Point Stone) -> Point -> Stone -> (Map Point Stone)
 addPiece m point stone = Map.insert point stone (Map.delete point m)
 
@@ -73,20 +81,25 @@ playMove game@(Game board lm s sb sw) point stone = removeGroups Game {
 } point ostone where ostone = getOppositeStone stone
 
 removeGroups :: Game -> Point -> Stone -> Game
-removeGroups game point@(Point x y) stone = removeDead up stone $ removeDead down stone $ removeDead left stone $ removeDead right stone game
+removeGroups game point@(Point x y) stone | length pointsToBeRemoved == 1 = updateScore (addKo (removeStones game pointsToBeRemoved) (pointsToBeRemoved !! 0)) 1 (getOppositeStone stone)
+                                          | otherwise = updateScore (removeStones game pointsToBeRemoved) (length pointsToBeRemoved) (getOppositeStone stone)
     where up = Point x (y+1)
           down = Point x (y-1)
           right = Point (x+1) y
           left = Point (x-1) y
+          pointsToBeRemoved = (removeDead up stone game) ++ (removeDead down stone game) ++ (removeDead left stone game) ++ (removeDead right stone game)
 
-removeDead :: Point -> Stone -> Game -> Game
-removeDead point stone game | checkIfTrapped game point stone = updateScore (removeStones game removablePoints) (length removablePoints) (getOppositeStone stone)
-                            | otherwise = game
+removeDead :: Point -> Stone -> Game -> [Maybe Point]
+removeDead point stone game | checkIfTrapped game point stone = removablePoints
+                            | otherwise = []
                             where removablePoints = (findTrappedGroup game point stone [])
 
 updateScore :: Game -> Int -> Stone -> Game
 updateScore game@(Game m lm s b w) p st | st == Black = (Game m lm s (b+p) w)
                                         | otherwise = (Game m lm s b (w+p))
+
+addKo :: Game -> (Maybe Point) -> Game
+addKo game@(Game m lm s b w) (Just p) = (Game (addPiece m p Ko) lm s b w)
 
 
 removeStones :: Game -> [Maybe Point] -> Game
@@ -138,10 +151,6 @@ validMove game@(Game m lm s _ _) p@(Point x y) st | x < 1 || x > s || y < 1 || y
 
 checkIfTrapped :: Game -> Point -> Stone -> Bool
 checkIfTrapped game p st = not $ elem Nothing (findTrappedGroup game p st [])
-
--- checkIfTrapped :: Game -> Point -> Stone -> Bool
--- checkIfTrapped game p st | length (List.filter checkIfNothing (findTrappedGroup game p st [])) == 0 = True
---                          | otherwise = False
 
 checkIfNothing :: (Maybe Point) -> Bool
 checkIfNothing Nothing = True
