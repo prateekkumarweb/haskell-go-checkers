@@ -12,7 +12,13 @@ playTurn game stone = do
     putStrLn $ show $ getBlackScore game
     putStrLn $ show $ getWhiteScore game
     moveX <- getLine
-    if moveX == "pass" then playTurn (playPass game stone) (getOppositeStone stone)
+    if moveX == "pass"
+        then do
+            if stone == White && getLastMove game == Pass
+                then
+                    putStrLn "GameOver"
+                else
+                    playTurn (playPass game stone) (getOppositeStone stone)
         else do
             moveY <- getLine
             let x = read moveX

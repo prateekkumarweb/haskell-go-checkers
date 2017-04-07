@@ -9,7 +9,10 @@ module BoardGo(
     findTrappedGroup,
     getBlackScore,
     getWhiteScore,
-    removeKo
+    removeKo,
+    playPass,
+    getLastMove,
+    Move(Pass, Move)
 ) where
 
 import Data.Map as Map
@@ -25,7 +28,7 @@ instance Show Stone where
     show Ko = " k "
     show Empty = " . "
 
-data Move = Pass | Move Point Stone
+data Move = Pass | Move Point Stone deriving (Eq)
 
 data Game = Game {
     board :: Map Point Stone,
@@ -34,6 +37,9 @@ data Game = Game {
     scoreBlack :: Int,
     scoreWhite :: Int
 }
+
+getLastMove :: Game -> Move
+getLastMove (Game _ lm _ _ _) = lm
 
 getBlackScore :: Game -> Int
 getBlackScore (Game _ _ _ b _) = b
