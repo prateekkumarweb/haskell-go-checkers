@@ -71,6 +71,17 @@ addPieces :: (Map Point Stone) -> [Point] -> (Map Point Stone)
 addPieces m [] = m
 addPieces m (x:xs) = addPieces (Map.insert x Empty m) xs
 
+playPass :: Game -> Stone -> Game
+playPass game@(Game board lm s sb sw) stone = Game {
+    board = board,
+    lastMove = Pass,
+    boardSize = s,
+    scoreBlack = newsb,
+    scoreWhite = newsw
+} where
+    newsb = if stone == Black then sb else (sb+1)
+    newsw = if stone == White then sw else (sw+1)
+
 playMove :: Game -> Point -> Stone -> Game
 playMove game@(Game board lm s sb sw) point stone = removeGroups Game {
     board = addPiece board point stone,
