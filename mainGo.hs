@@ -1,4 +1,5 @@
 import BoardGo
+import System.IO.Unsafe
 
 main :: IO ()
 main = do
@@ -15,8 +16,9 @@ playTurn game stone = do
     if moveX == "pass"
         then do
             if stone == White && getLastMove game == Pass
-                then
+                then do
                     putStrLn "GameOver"
+                    endGame (playPass game stone)
                 else
                     playTurn (playPass game stone) (getOppositeStone stone)
         else do
@@ -26,3 +28,36 @@ playTurn game stone = do
             let isValidMove = validMove game (Point x y) stone
             if isValidMove then playTurn (playMove (removeKo game) (Point x y) stone) (getOppositeStone stone)
                 else playTurn game stone
+
+endGame :: Game -> IO ()
+endGame game@(Game m lm size sb sw) = do
+    putStrLn "Enter the hopeless points"
+    n <- getLine
+    let hs = getPoints (read n) []
+    print hs
+    let newg = removeHopeless game $ hs
+    putStrLn $ show game
+    showWinner newg
+
+showWinner :: Game -> IO ()
+showWinner newg = do
+    putStrLn $ getWinner newg
+    putStrLn $ show $ getBlackScore newg
+    putStrLn $ show $ getWhiteScore newg
+    putStrLn $ show newg
+
+
+getPoints :: Int -> [Point] -> [Point]
+getPoints n points = do
+    if n == 0 then points
+        else do
+            let p = unsafePerformIO getPoint
+            getPoints (n-1) (p:points)
+
+getPoint :: IO Point
+getPoint = do
+    x <- getLine
+    y <- getLine
+    let a = read x
+    let b = read y
+    return $ Point a b

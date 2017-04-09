@@ -1,6 +1,6 @@
 module BoardGo(
     createGame,
-    Game(board),
+    Game(Game),
     playMove,
     validMove,
     getOppositeStone,
@@ -12,7 +12,9 @@ module BoardGo(
     removeKo,
     playPass,
     getLastMove,
-    Move(Pass, Move)
+    Move(Pass, Move),
+    removeHopeless,
+    getWinner
 ) where
 
 import Data.Map as Map
@@ -192,3 +194,20 @@ withEmptySpaces :: [(Point, Stone)] -> [Char]
 withEmptySpaces row = concat $ ((intersperse "" (List.map show pieces)))
   where
       pieces = List.map snd row
+
+getWinner :: Game -> String
+getWinner game@(Game _ _ _ sb sw) | sb > sw = "Black wins."
+                                  | sw > sb = "White wins."
+                                  | otherwise = "Game Draws"
+
+removeHopeless :: Game -> [Point] -> Game
+removeHopeless game@(Game m lm s sb sw) [] = game
+removeHopeless game@(Game m lm s sb sw) (p:points) = removeHopeless Game{
+  board = removePiece m p,
+  lastMove = lm,
+  boardSize = s,
+  scoreBlack = newsb,
+  scoreWhite = newsw
+} points where
+  newsb = if seekBoard game p == White then (sb+1) else sb
+  newsw = if seekBoard game p == Black then (sw+1) else sw
