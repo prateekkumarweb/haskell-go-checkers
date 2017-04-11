@@ -1,8 +1,12 @@
+module Go(
+    playGo
+) where
+
 import BoardGo
 import System.IO.Unsafe
 
-main :: IO ()
-main = do
+playGo :: IO ()
+playGo = do
     let game = createGame
     playTurn game Black
 

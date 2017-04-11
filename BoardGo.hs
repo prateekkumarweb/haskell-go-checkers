@@ -65,7 +65,7 @@ removeKoFromMap :: [(Point, Stone)] -> (Map Point Stone) -> (Map Point Stone)
 removeKoFromMap [] m = m
 removeKoFromMap ((p,s):xs) m = addPiece m p Empty
 
-addPiece :: (Map Point Stone) -> Point -> Stone -> (Map Point Stone)
+addPiece :: (Map Point t) -> Point -> t -> (Map Point t)
 addPiece m point stone = Map.insert point stone (Map.delete point m)
 
 removePiece :: (Map Point Stone) -> Point -> (Map Point Stone)
@@ -131,6 +131,11 @@ seekBoard (Game m _ _ _ _) p = case Map.lookup p m of
     Just stone -> stone
     Nothing -> Empty
 
+seekMap :: (Map Point Status) -> Point -> Status
+seekMap m p = case Map.lookup p m of
+    Just s -> s
+    Nothing -> Unseen
+
 findTrappedGroup :: Game -> Point -> Stone -> [Maybe Point] -> [Maybe Point]
 findTrappedGroup game@(Game m move@(Move pt st) boardSize _ _) point@(Point x y) stone seenPoints
     | x < 1 || x > boardSize || y < 1 || y > boardSize  = seenPoints
@@ -146,6 +151,38 @@ findTrappedGroup game@(Game m move@(Move pt st) boardSize _ _) point@(Point x y)
           down = Point x (y-1)
           right = Point (x+1) y
           left = Point (x-1) y
+
+data Status = Seen | Unseen | SeenW | SeenB | None
+
+-- findTerritory :: Game -> Point -> Stone -> ((Map Point Status), [Maybe Point]) -> ((Map Point Status), [Maybe Point])
+-- findTerritory game@(Game _ _ boardSize _ _) point@(Point x y) stone (m, points)
+--     | x < 1 || x > boardSize || y < 1 || y > boardSize = (m, points)
+--     | elem (pure point) points = (m, points)
+--     | seekBoard game point == getOppositeStone stone = (m, Nothing:points)
+--     | seekBoard game point == stone = (m, points)
+--     | otherwise = findTerritory game left stone
+--         $ findTerritory game right stone
+--         $ findTerritory game up stone
+--         $ findTerritory game down stone ((Map.insert point Seen m), ((pure point):points))
+--     where up = Point x (y+1)
+--           down = Point x (y-1)
+--           right = Point (x+1) y
+--           left = Point (x-1) y
+--
+-- findTerritories :: Game -> Point -> (Map Point Status) -> (Map Point Status)
+-- findTerritories game point m
+--     | seekBoard game point /= Empty = addPiece m point None
+--     | seekMap m point == SeenW = m
+--     | seekMap m point == SeenB = m
+--     | seekMap m point == None = m
+--     | if elem Nothing (snd tw) then
+--         if elem Nothing (snd tb) then setInMap (fst tb) None
+--             else setInMap (fst tb) SeenB
+--         else setInMap (fst tw) SeenW
+--     where tb = findTerritory game point Black (m, [])
+--         tw = findTerritory game point White (m, [])
+--
+-- setInMap :: ((Map Point Status), [Maybe Point]) -> Status -> (Map Point Status)
 
 getOppositeStone :: Stone -> Stone
 getOppositeStone stone | stone == Black = White

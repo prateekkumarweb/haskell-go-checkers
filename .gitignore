@@ -18,9 +18,4 @@ cabal.sandbox.config
 .stack-work/
 cabal.project.local
 
-main
-board
-BoardGo
-test*
-*~
-mainGo
+Main
