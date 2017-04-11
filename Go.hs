@@ -42,6 +42,7 @@ endGame game@(Game m lm size sb sw) = do
     let newg = removeHopeless game $ hs
     putStrLn $ show game
     showWinner newg
+    putStrLn $ show $ findAllTerritories newg
 
 showWinner :: Game -> IO ()
 showWinner newg = do

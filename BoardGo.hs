@@ -14,7 +14,8 @@ module BoardGo(
     getLastMove,
     Move(Pass, Move),
     removeHopeless,
-    getWinner
+    getWinner,
+    findAllTerritories
 ) where
 
 import Data.Map as Map
@@ -152,37 +153,51 @@ findTrappedGroup game@(Game m move@(Move pt st) boardSize _ _) point@(Point x y)
           right = Point (x+1) y
           left = Point (x-1) y
 
-data Status = Seen | Unseen | SeenW | SeenB | None
+data Status = Seen | Unseen | SeenW | SeenB | None deriving (Eq, Show)
 
--- findTerritory :: Game -> Point -> Stone -> ((Map Point Status), [Maybe Point]) -> ((Map Point Status), [Maybe Point])
--- findTerritory game@(Game _ _ boardSize _ _) point@(Point x y) stone (m, points)
---     | x < 1 || x > boardSize || y < 1 || y > boardSize = (m, points)
---     | elem (pure point) points = (m, points)
---     | seekBoard game point == getOppositeStone stone = (m, Nothing:points)
---     | seekBoard game point == stone = (m, points)
---     | otherwise = findTerritory game left stone
---         $ findTerritory game right stone
---         $ findTerritory game up stone
---         $ findTerritory game down stone ((Map.insert point Seen m), ((pure point):points))
---     where up = Point x (y+1)
---           down = Point x (y-1)
---           right = Point (x+1) y
---           left = Point (x-1) y
---
--- findTerritories :: Game -> Point -> (Map Point Status) -> (Map Point Status)
--- findTerritories game point m
---     | seekBoard game point /= Empty = addPiece m point None
---     | seekMap m point == SeenW = m
---     | seekMap m point == SeenB = m
---     | seekMap m point == None = m
---     | if elem Nothing (snd tw) then
---         if elem Nothing (snd tb) then setInMap (fst tb) None
---             else setInMap (fst tb) SeenB
---         else setInMap (fst tw) SeenW
---     where tb = findTerritory game point Black (m, [])
---         tw = findTerritory game point White (m, [])
---
--- setInMap :: ((Map Point Status), [Maybe Point]) -> Status -> (Map Point Status)
+findTerritory :: Game -> Point -> Stone -> ((Map Point Status), [Maybe Point]) -> ((Map Point Status), [Maybe Point])
+findTerritory game@(Game _ _ boardSize _ _) point@(Point x y) stone (m, points)
+    | x < 1 || x > boardSize || y < 1 || y > boardSize = (m, points)
+    | elem (pure point) points = (m, points)
+    | seekBoard game point == getOppositeStone stone = (m, Nothing:points)
+    | seekBoard game point == stone = (m, points)
+    | otherwise = findTerritory game left stone
+        $ findTerritory game right stone
+        $ findTerritory game up stone
+        $ findTerritory game down stone ((Map.insert point Seen m), ((pure point):points))
+    where up = Point x (y+1)
+          down = Point x (y-1)
+          right = Point (x+1) y
+          left = Point (x-1) y
+
+findTerritories :: Game -> Point -> (Map Point Status) -> (Map Point Status)
+findTerritories game point m
+    | seekBoard game point /= Empty = addPiece m point None
+    | seekMap m point == SeenW = m
+    | seekMap m point == SeenB = m
+    | seekMap m point == None = m
+    | otherwise = if elem Nothing (snd tw) then
+        if elem Nothing (snd tb) then setInMap m (snd tb) None
+            else setInMap m (snd tb) SeenB
+        else setInMap m (snd tw) SeenW
+    where tb = findTerritory game point Black (m, [])
+          tw = findTerritory game point White (m, [])
+
+setInMap :: (Map Point Status) -> [Maybe Point] -> Status -> (Map Point Status)
+setInMap m [] st = m
+setInMap m (point:points) st | point /= Nothing = setInMap (addPiece m (purify point) st) points st
+                             | otherwise = setInMap m points st
+
+findAllTerritoriesOfPoints :: Game -> [Point] -> (Map Point Status) -> (Map Point Status)
+findAllTerritoriesOfPoints game [] m = m
+findAllTerritoriesOfPoints game (point:points) m = findAllTerritoriesOfPoints game points (findTerritories game point m)
+
+findAllTerritories :: Game -> (Map Point Status)
+findAllTerritories game@(Game _ _ boardSize _ _) = findAllTerritoriesOfPoints game points Map.empty
+    where points = [(Point x y) | x <- [1..boardSize], y <- [1..boardSize]]
+
+purify :: Maybe a -> a
+purify (Just a) = a
 
 getOppositeStone :: Stone -> Stone
 getOppositeStone stone | stone == Black = White
