@@ -15,7 +15,12 @@ module BoardGo(
     Move(Pass, Move),
     removeHopeless,
     getWinner,
-    findAllTerritories
+    findAllTerritories,
+    killGame,
+    GameStatus(Alive, Dead),
+    seekBoard,
+    removePiece,
+    finishGame
 ) where
 
 import Data.Map as Map
@@ -38,17 +43,24 @@ data Game = Game {
     lastMove :: Move,
     boardSize :: Int,
     scoreBlack :: Int,
-    scoreWhite :: Int
+    scoreWhite :: Int,
+    status :: GameStatus
 }
 
+data GameStatus = Alive | Dead
+
+killGame :: Game -> Game
+killGame game@(Game m lm s sb sw Alive) = Game m lm s (sb+1) sw Dead
+killGame game = game
+
 getLastMove :: Game -> Move
-getLastMove (Game _ lm _ _ _) = lm
+getLastMove (Game _ lm _ _ _ _) = lm
 
 getBlackScore :: Game -> Int
-getBlackScore (Game _ _ _ b _) = b
+getBlackScore (Game _ _ _ b _ _) = b
 
 getWhiteScore :: Game -> Int
-getWhiteScore (Game _ _ _ _ w) = w
+getWhiteScore (Game _ _ _ _ w _) = w
 
 createGame :: Int -> Game
 createGame size = Game{
@@ -56,11 +68,12 @@ createGame size = Game{
     lastMove = Move (Point (-1) (-1)) White,
     boardSize = size,
     scoreBlack = 0,
-    scoreWhite = 0
+    scoreWhite = 0,
+    status = Alive
 }
 
 removeKo :: Game -> Game
-removeKo game@(Game m lm s b w) = (Game (removeKoFromMap (List.filter (\(p, s) -> s == Ko) (assocs m)) m) lm s b w)
+removeKo game@(Game m lm s b w status) = (Game (removeKoFromMap (List.filter (\(p, s) -> s == Ko) (assocs m)) m) lm s b w status)
 
 removeKoFromMap :: [(Point, Stone)] -> (Map Point Stone) -> (Map Point Stone)
 removeKoFromMap [] m = m
@@ -81,23 +94,25 @@ addPieces m [] = m
 addPieces m (x:xs) = addPieces (Map.insert x Empty m) xs
 
 playPass :: Game -> Stone -> Game
-playPass game@(Game board lm s sb sw) stone = Game {
+playPass game@(Game board lm s sb sw status) stone = Game {
     board = board,
     lastMove = Pass stone,
     boardSize = s,
     scoreBlack = newsb,
-    scoreWhite = newsw
+    scoreWhite = newsw,
+    status = status
 } where
     newsb = if stone == Black then sb else (sb+1)
     newsw = if stone == White then sw else (sw+1)
 
 playMove :: Game -> Point -> Stone -> Game
-playMove game@(Game board lm s sb sw) point stone = removeGroups Game {
+playMove game@(Game board lm s sb sw status) point stone = removeGroups Game {
     board = addPiece board point stone,
     lastMove = Move point stone,
     boardSize = s,
     scoreBlack = sb,
-    scoreWhite = sw
+    scoreWhite = sw,
+    status = status
 } point ostone where ostone = getOppositeStone stone
 
 removeGroups :: Game -> Point -> Stone -> Game
@@ -115,20 +130,20 @@ removeDead point stone game | checkIfTrapped game point stone = removablePoints
                             where removablePoints = (findTrappedGroup game point stone [])
 
 updateScore :: Game -> Int -> Stone -> Game
-updateScore game@(Game m lm s b w) p st | st == Black = (Game m lm s (b+p) w)
-                                        | otherwise = (Game m lm s b (w+p))
+updateScore game@(Game m lm s b w status) p st | st == Black = (Game m lm s (b+p) w status)
+                                        | otherwise = (Game m lm s b (w+p) status)
 
 addKo :: Game -> (Maybe Point) -> Game
-addKo game@(Game m lm s b w) (Just p) = (Game (addPiece m p Ko) lm s b w)
+addKo game@(Game m lm s b w status) (Just p) = (Game (addPiece m p Ko) lm s b w status)
 
 
 removeStones :: Game -> [Maybe Point] -> Game
-removeStones game@(Game m lm _ _ _) [] = game
-removeStones game@(Game m lm s b w) (Nothing:xs) = game
-removeStones game@(Game m lm s b w) ((Just p):xs) = removeStones (Game (removePiece m p) lm s b w) xs
+removeStones game@(Game m lm _ _ _ status) [] = game
+removeStones game@(Game m lm s b w status) (Nothing:xs) = game
+removeStones game@(Game m lm s b w status) ((Just p):xs) = removeStones (Game (removePiece m p) lm s b w status) xs
 
 seekBoard :: Game -> Point -> Stone
-seekBoard (Game m _ _ _ _) p = case Map.lookup p m of
+seekBoard (Game m _ _ _ _ _) p = case Map.lookup p m of
     Just stone -> stone
     Nothing -> Empty
 
@@ -138,7 +153,7 @@ seekMap m p = case Map.lookup p m of
     Nothing -> Unseen
 
 findTrappedGroup :: Game -> Point -> Stone -> [Maybe Point] -> [Maybe Point]
-findTrappedGroup game@(Game m move@(Move pt st) boardSize _ _) point@(Point x y) stone seenPoints
+findTrappedGroup game@(Game m move@(Move pt st) boardSize _ _ _) point@(Point x y) stone seenPoints
     | x < 1 || x > boardSize || y < 1 || y > boardSize  = seenPoints
     | elem (pure point) seenPoints = seenPoints
     | seekBoard game point == Empty = Nothing:seenPoints
@@ -156,7 +171,7 @@ findTrappedGroup game@(Game m move@(Move pt st) boardSize _ _) point@(Point x y)
 data Status = Seen | Unseen | SeenW | SeenB | None deriving (Eq, Show)
 
 findTerritory :: Game -> Point -> Stone -> ((Map Point Status), [Maybe Point]) -> ((Map Point Status), [Maybe Point])
-findTerritory game@(Game _ _ boardSize _ _) point@(Point x y) stone (m, points)
+findTerritory game@(Game _ _ boardSize _ _ _) point@(Point x y) stone (m, points)
     | x < 1 || x > boardSize || y < 1 || y > boardSize = (m, points)
     | elem (pure point) points = (m, points)
     | seekBoard game point == getOppositeStone stone = (m, Nothing:points)
@@ -193,8 +208,24 @@ findAllTerritoriesOfPoints game [] m = m
 findAllTerritoriesOfPoints game (point:points) m = findAllTerritoriesOfPoints game points (findTerritories game point m)
 
 findAllTerritories :: Game -> (Map Point Status)
-findAllTerritories game@(Game _ _ boardSize _ _) = findAllTerritoriesOfPoints game points Map.empty
+findAllTerritories game@(Game _ _ boardSize _ _ _) = findAllTerritoriesOfPoints game points Map.empty
     where points = [(Point x y) | x <- [1..boardSize], y <- [1..boardSize]]
+
+finishGame :: Game -> Game
+finishGame game@(Game m lm s sb sw status) = Game m lm s sb' sw' status
+    where sb' = sb + countSeenB t s
+          sw' = sw + countSeenW t s
+          t = findAllTerritories game
+
+countSeenB :: (Map Point Status) -> Int -> Int
+countSeenB m size | l == size*size = 0
+                  | otherwise = l
+                  where l = length $ List.filter (\(p,s) -> s == SeenB) (assocs m)
+
+countSeenW :: (Map Point Status) -> Int -> Int
+countSeenW m size | l == size*size = 0
+                  | otherwise = l
+                  where l = length $ List.filter (\(p,s) -> s == SeenW) (assocs m)
 
 purify :: Maybe a -> a
 purify (Just a) = a
@@ -205,7 +236,7 @@ getOppositeStone stone | stone == Black = White
                        | otherwise = Empty
 
 validMove :: Game -> Point -> Stone -> Bool
-validMove game@(Game m lm s _ _) p@(Point x y) st | x < 1 || x > s || y < 1 || y > s = False
+validMove game@(Game m lm s _ _ _) p@(Point x y) st | x < 1 || x > s || y < 1 || y > s = False
     | seekBoard game p /= Empty = False
     | not $ checkIfTrapped game1 p st = True
     | (seekBoard game up == ostone) && (checkIfTrapped game1 up ostone) = True
@@ -247,19 +278,21 @@ checkIfNothing (Just point) = False
 --   where
 --       pieces = List.map snd row
 
+
 getWinner :: Game -> String
-getWinner game@(Game _ _ _ sb sw) | sb > sw = "Black wins."
+getWinner game@(Game _ _ _ sb sw _) | sb > sw = "Black wins."
                                   | sw > sb = "White wins."
                                   | otherwise = "Game Draws"
 
 removeHopeless :: Game -> [Point] -> Game
-removeHopeless game@(Game m lm s sb sw) [] = game
-removeHopeless game@(Game m lm s sb sw) (p:points) = removeHopeless Game{
+removeHopeless game@(Game m lm s sb sw status) [] = game
+removeHopeless game@(Game m lm s sb sw status) (p:points) = removeHopeless Game{
   board = removePiece m p,
   lastMove = lm,
   boardSize = s,
   scoreBlack = newsb,
-  scoreWhite = newsw
+  scoreWhite = newsw,
+  status = status
 } points where
   newsb = if seekBoard game p == White then (sb+1) else sb
   newsw = if seekBoard game p == Black then (sw+1) else sw
