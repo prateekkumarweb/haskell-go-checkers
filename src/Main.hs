@@ -6,7 +6,7 @@ import Graphics.Gloss
 
 main :: IO()
 main = do
-    display (InWindow "Nice Window" (200, 200) (10, 10)) white (Circle 80)
+    --display (InWindow "Nice Window" (200, 200) (10, 10)) white (Circle 80)
     putStrLn $ "Enter 1 to play Go"
     putStrLn $ "Enter 2 to play Checkers"
     putStrLn $ "Enter 0 to Exit"
