@@ -31,7 +31,7 @@ instance Show Stone where
     show Ko = " k "
     show Empty = " . "
 
-data Move = Pass | Move Point Stone deriving (Eq)
+data Move = Pass Stone | Move Point Stone deriving (Eq)
 
 data Game = Game {
     board :: Map Point Stone,
@@ -50,11 +50,11 @@ getBlackScore (Game _ _ _ b _) = b
 getWhiteScore :: Game -> Int
 getWhiteScore (Game _ _ _ _ w) = w
 
-createGame :: Game
-createGame = Game{
-    board = initalizeGameMap 19,
+createGame :: Int -> Game
+createGame size = Game{
+    board = initalizeGameMap size,
     lastMove = Move (Point (-1) (-1)) White,
-    boardSize = 19,
+    boardSize = size,
     scoreBlack = 0,
     scoreWhite = 0
 }
@@ -83,7 +83,7 @@ addPieces m (x:xs) = addPieces (Map.insert x Empty m) xs
 playPass :: Game -> Stone -> Game
 playPass game@(Game board lm s sb sw) stone = Game {
     board = board,
-    lastMove = Pass,
+    lastMove = Pass stone,
     boardSize = s,
     scoreBlack = newsb,
     scoreWhite = newsw
@@ -205,7 +205,7 @@ getOppositeStone stone | stone == Black = White
                        | otherwise = Empty
 
 validMove :: Game -> Point -> Stone -> Bool
-validMove game@(Game m lm s _ _) p@(Point x y) st | x < 1 || x > s || y < 1 || y > 19 = False
+validMove game@(Game m lm s _ _) p@(Point x y) st | x < 1 || x > s || y < 1 || y > s = False
     | seekBoard game p /= Empty = False
     | not $ checkIfTrapped game1 p st = True
     | (seekBoard game up == ostone) && (checkIfTrapped game1 up ostone) = True
@@ -227,25 +227,25 @@ checkIfNothing :: (Maybe Point) -> Bool
 checkIfNothing Nothing = True
 checkIfNothing (Just point) = False
 
-instance Show Game where
-  show = mBShow
-
-mBShow :: Game -> String
-mBShow game@(Game m _ s _ _) = "   1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19\n" ++ showRows 1 (assocs m)
-
-showRows :: Int -> [(Point, Stone)] -> String
-showRows _ [] = ""
-showRows rowNum rows = show rowNum ++ " " ++ (showRow $ (take 19 rows)) ++ (showRows (rowNum+1) (drop 19 rows))
-
-showRow :: [(Point, Stone)] -> [Char]
-showRow ((Point r c, piece):rest) = rowStr ++ "\n"
-  where
-      rowStr = withEmptySpaces ((Point r c, piece):rest)
-
-withEmptySpaces :: [(Point, Stone)] -> [Char]
-withEmptySpaces row = concat $ ((intersperse "" (List.map show pieces)))
-  where
-      pieces = List.map snd row
+-- instance Show Game where
+--   show = mBShow
+--
+-- mBShow :: Game -> String
+-- mBShow game@(Game m _ s _ _) = "   1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19\n" ++ showRows 1 (assocs m)
+--
+-- showRows :: Int -> [(Point, Stone)] -> String
+-- showRows _ [] = ""
+-- showRows rowNum rows = show rowNum ++ " " ++ (showRow $ (take 19 rows)) ++ (showRows (rowNum+1) (drop 19 rows))
+--
+-- showRow :: [(Point, Stone)] -> [Char]
+-- showRow ((Point r c, piece):rest) = rowStr ++ "\n"
+--   where
+--       rowStr = withEmptySpaces ((Point r c, piece):rest)
+--
+-- withEmptySpaces :: [(Point, Stone)] -> [Char]
+-- withEmptySpaces row = concat $ ((intersperse "" (List.map show pieces)))
+--   where
+--       pieces = List.map snd row
 
 getWinner :: Game -> String
 getWinner game@(Game _ _ _ sb sw) | sb > sw = "Black wins."
