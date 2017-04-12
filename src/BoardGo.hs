@@ -172,7 +172,7 @@ findTerritory game@(Game _ _ boardSize _ _) point@(Point x y) stone (m, points)
 
 findTerritories :: Game -> Point -> (Map Point Status) -> (Map Point Status)
 findTerritories game point m
-    | seekBoard game point /= Empty = addPiece m point None
+    | seekBoard game point /= Empty && seekBoard game point /= Ko = addPiece m point None
     | seekMap m point == SeenW = m
     | seekMap m point == SeenB = m
     | seekMap m point == None = m
