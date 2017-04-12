@@ -6,14 +6,26 @@ import Data.Map
 import BoardGo
 import System.IO.Unsafe
 import Graphics.Gloss
+import Graphics.Gloss.Interface.IO.Game
 
 playGo :: IO ()
 playGo = do
     let game = createGame
-    let mng = playMove (playMove game (BoardGo.Point 1 2) White) (BoardGo.Point 19 19) Black
+    --let mng = playMove (playMove game (BoardGo.Point 1 2) White) (BoardGo.Point 19 19) Black
     let window = InWindow "Go Window" (20 * 19, 20 * 19) (10, 10)
-    display window (dark yellow) $ render mng
+    play window (dark yellow) 1 game render handleClick f
+    --display window (dark yellow) $ render mng
     playTurn game Black
+
+f :: Float -> Game -> Game
+f _ game = game
+
+handleClick :: Event -> Game -> Game
+handleClick (EventKey (MouseButton LeftButton) _ _ (x, y)) game@(Game _ lm@(Move _ st) s _ _) = if validMove game p $ getOppositeStone st
+    then playMove (removeKo game) p $ getOppositeStone st
+    else game
+    where p = BoardGo.Point (round ((x + 10*(fromIntegral s+1))/20)) (round ((-1*y + 10*(fromIntegral s+1))/20))
+handleClick _ game = game
 
 playTurn :: Game -> Stone -> IO()
 playTurn game stone = do

@@ -53,7 +53,7 @@ getWhiteScore (Game _ _ _ _ w) = w
 createGame :: Game
 createGame = Game{
     board = initalizeGameMap 19,
-    lastMove = Move (Point (-1) (-1)) Black,
+    lastMove = Move (Point (-1) (-1)) White,
     boardSize = 19,
     scoreBlack = 0,
     scoreWhite = 0
