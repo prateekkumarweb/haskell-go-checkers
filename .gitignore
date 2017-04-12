@@ -17,12 +17,5 @@ cabal.sandbox.config
 *.eventlog
 .stack-work/
 cabal.project.local
-
-main
-board
-BoardGo
-test*
 *~
-mainGo
 pong/
-Graphics/

@@ -1,8 +1,12 @@
+module Go(
+    playGo
+) where
+
 import BoardGo
 import System.IO.Unsafe
 
-main :: IO ()
-main = do
+playGo :: IO ()
+playGo = do
     let game = createGame
     playTurn game Black
 
@@ -38,6 +42,7 @@ endGame game@(Game m lm size sb sw) = do
     let newg = removeHopeless game $ hs
     putStrLn $ show game
     showWinner newg
+    putStrLn $ show $ findAllTerritories newg
 
 showWinner :: Game -> IO ()
 showWinner newg = do

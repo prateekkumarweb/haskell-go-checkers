@@ -1,4 +1,4 @@
-module Board(
+module BoardCheckers(
     startGame,
     Player(Red, Black),
     BoardMap,

@@ -1,6 +1,11 @@
-import Board
+module Checkers(
+    playCheckers
+) where
 
-main = do
+import BoardCheckers
+
+playCheckers :: IO()
+playCheckers = do
     let s = startGame
     let moves = validMoves s Black
     showBoardMovesPlay s moves Black
