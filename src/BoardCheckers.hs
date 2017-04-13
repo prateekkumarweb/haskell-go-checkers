@@ -1,13 +1,17 @@
 module BoardCheckers(
     startGame,
     Player(Red, Black),
-    BoardMap,
-    Move,
+    --BoardMap,
+    Move(March, Jump),
     isJump,
     Board(seekBoard, validMoves, playMove),
     Square(Square),
     getDestination,
-    mValidJumps
+    mValidJumps,
+    Game(Game),
+    Piece(Empty, Piece),
+    PieceType(Pawn, King),
+    BoardMap(BoardMap)
 ) where
 
 import Data.Map as Map
@@ -19,7 +23,7 @@ instance Show Player where
     show Red = " R"
     show Black = " B"
 
-data Move =  Jump Square Square | March Square Square
+data Move =  Jump Square Square | March Square Square deriving (Eq)
 
 instance Show Move where
     show (Jump (Square x1 y1) (Square x2 y2)) = " Jump (" ++ show x1 ++ ", " ++ show y1 ++ ") (" ++ show x2 ++ ", " ++ show y2 ++ ")\n"
@@ -62,6 +66,8 @@ instance Show Piece where
     show (Piece player piecetype) = show player ++ show piecetype
 
 data BoardMap = BoardMap (Map Square Piece) -- deriving (Show)
+
+data Game = Game BoardMap [Move] Player Square --
 
 class Board board where
     seekBoard :: board -> Square -> Piece

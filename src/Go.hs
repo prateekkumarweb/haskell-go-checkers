@@ -40,7 +40,6 @@ getOppositeStoneFromLastMove (Pass st) = getOppositeStone st
 
 render :: Game -> Picture
 render game@(Game m _ s sb sw _) = pictures [ (pictures gameHorizontalLines), (pictures gameVerticalLines), (pictures stones), passButton, scoreBlack]
-    --where gameHorizontalLines = [line [(-180,0)
     where gameHorizontalLines = [line [(fromIntegral (10 - 10*s),fromIntegral (10*s - 10 - 20*x)), (fromIntegral (20*s - 10 - 10*s),fromIntegral (10*s - 10 - 20*x))] | x <- [0..(s-1)]]
           gameVerticalLines = [line [(fromIntegral (10*s - 10 - 20*x),fromIntegral (10 - 10*s)), (fromIntegral (10*s - 10 - 20*x),fromIntegral (-10*s + 20*s - 10))] | x <- [0..(s-1)]]
           stones = [translate (fromIntegral (x*20 - 10*s-10)) (fromIntegral (10*s - y*20 + 10)) $ color c $ circleSolid 8 | (BoardGo.Point x y, st) <- (assocs m) , c <- [black,white], ((st == Black && c == black) ||  (st == White && c == white))]
