@@ -7,6 +7,7 @@ module BoardCheckers(
     Board(seekBoard, validMoves, playMove),
     Square(Square),
     getDestination,
+    getSource,
     mValidJumps,
     Game(Game),
     Piece(Empty, Piece),
@@ -36,6 +37,10 @@ isJump (March _ _) = False
 getDestination :: Move -> Square
 getDestination (March _ s) = s
 getDestination (Jump _ s) = s
+
+getSource :: Move -> Square
+getSource (March s _) = s
+getSource (Jump s _) = s
 
 data Square = Square Int Int deriving (Show)
 
