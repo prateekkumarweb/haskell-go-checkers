@@ -19,7 +19,7 @@ playGo = do
 
 handleEvent :: Event -> Game -> Game
 handleEvent (EventKey (MouseButton LeftButton) Down _ (x, y)) game@(Game _ lm s _ _ Alive)
-    | validMove game p $ getOppositeStone st = playMove (removeKo game) p st
+    | validMove game p st = playMove (removeKo game) p st
     where p = BoardGo.Point (round ((x + 10*(fromIntegral s+1))/20)) (round ((-1*y + 10*(fromIntegral s+1))/20))
           st = getOppositeStoneFromLastMove lm
 handleEvent (EventKey (Char 'p') Down _ _) game@(Game _ lm s _ _ Alive)

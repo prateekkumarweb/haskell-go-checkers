@@ -112,13 +112,24 @@ playMove game@(Game board lm s sb sw status) point stone = removeGroups Game {
 } point ostone where ostone = getOppositeStone stone
 
 removeGroups :: Game -> Point -> Stone -> Game
-removeGroups game point@(Point x y) stone | length pointsToBeRemoved == 1 = updateScore (addKo (removeStones game pointsToBeRemoved) (pointsToBeRemoved !! 0)) 1 (getOppositeStone stone)
+removeGroups game@(Game board lm s sb sw status) point@(Point x y) stone | length pointsToBeRemoved == 1 && isKo = updateScore (addKo (removeStones game pointsToBeRemoved) (pointsToBeRemoved !! 0)) 1 (getOppositeStone stone)
                                           | otherwise = updateScore (removeStones game pointsToBeRemoved) (length pointsToBeRemoved) (getOppositeStone stone)
     where up = Point x (y+1)
           down = Point x (y-1)
           right = Point (x+1) y
           left = Point (x-1) y
-          pointsToBeRemoved = (removeDead up stone game) ++ (removeDead down stone game) ++ (removeDead left stone game) ++ (removeDead right stone game)
+          removeUp = removeDead up stone game
+          removeDown = removeDead down stone game
+          removeLeft = removeDead left stone game
+          removeRight = removeDead right stone game
+          pointsToBeRemoved = removeUp ++ removeDown ++ removeLeft ++ removeRight
+          point' = if length removeUp == 1 then up else if length removeDown == 1 then down else if length removeLeft == 1 then left else right
+          (up', down', left', right') = getAdj point'
+          stone' = getOppositeStone stone
+          isKo = length ((removeDead up' stone' game) ++ (removeDead down' stone' game) ++ (removeDead left' stone' game) ++ (removeDead right' stone' game)) == 1
+
+getAdj :: Point -> (Point, Point, Point, Point)
+getAdj (Point x y) = (Point x (y+1), Point x (y-1), Point (x-1) y, Point (x+1) y)
 
 removeDead :: Point -> Stone -> Game -> [Maybe Point]
 removeDead point stone game | checkIfTrapped game point stone = removablePoints
