@@ -7,11 +7,10 @@ module BoardGo(
     Stone(Black, White),
     Point(Point),
     findTrappedGroup,
-    getBlackScore,
-    getWhiteScore,
+    -- getBlackScore,
+    -- getWhiteScore,
     removeKo,
     playPass,
-    getLastMove,
     Move(Pass, Move),
     removeHopeless,
     getWinner,
@@ -26,15 +25,15 @@ module BoardGo(
 import Data.Map as Map
 import Data.List as List
 
-data Point = Point Int Int deriving (Ord, Eq, Show)
+data Point = Point Int Int deriving (Ord, Eq)
 
 data Stone = Black | White | Ko | Empty  deriving (Eq)
 
-instance Show Stone where
-    show Black = " b "
-    show White = " w "
-    show Ko = " k "
-    show Empty = " . "
+-- instance Show Stone where
+--     show Black = " b "
+--     show White = " w "
+--     show Ko = " k "
+--     show Empty = " . "
 
 data Move = Pass Stone | Move Point Stone deriving (Eq)
 
@@ -53,14 +52,11 @@ killGame :: Game -> Game
 killGame game@(Game m lm s sb sw Alive) = Game m lm s (sb+1) sw Dead
 killGame game = game
 
-getLastMove :: Game -> Move
-getLastMove (Game _ lm _ _ _ _) = lm
+-- getBlackScore :: Game -> Int
+-- getBlackScore (Game _ _ _ b _ _) = b
 
-getBlackScore :: Game -> Int
-getBlackScore (Game _ _ _ b _ _) = b
-
-getWhiteScore :: Game -> Int
-getWhiteScore (Game _ _ _ _ w _) = w
+-- getWhiteScore :: Game -> Int
+-- getWhiteScore (Game _ _ _ _ w _) = w
 
 createGame :: Int -> Game
 createGame size = Game{

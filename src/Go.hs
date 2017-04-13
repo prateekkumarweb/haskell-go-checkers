@@ -4,7 +4,6 @@ module Go(
 
 import Data.Map
 import BoardGo
--- import System.IO.Unsafe
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 
@@ -24,7 +23,7 @@ handleEvent (EventKey (MouseButton LeftButton) Down _ (x, y)) game@(Game _ lm s 
     where p = BoardGo.Point (round ((x + 10*(fromIntegral s+1))/20)) (round ((-1*y + 10*(fromIntegral s+1))/20))
           st = getOppositeStoneFromLastMove lm
 handleEvent (EventKey (Char 'p') Down _ _) game@(Game _ lm s _ _ Alive)
-    | getLastMove game == Pass Black = killGame game
+    | lm == Pass Black = killGame game
     | otherwise = playPass (removeKo game) st
     where st = getOppositeStoneFromLastMove lm
 handleEvent (EventKey (MouseButton LeftButton) Down _ (x, y)) game@(Game m lm s sb sw Dead) = Game (removePiece m (BoardGo.Point x' y')) lm s sb' sw' Dead
@@ -38,6 +37,15 @@ handleEvent _ game = game
 getOppositeStoneFromLastMove :: Move -> Stone
 getOppositeStoneFromLastMove (Move _ st) = getOppositeStone st
 getOppositeStoneFromLastMove (Pass st) = getOppositeStone st
+
+render :: Game -> Picture
+render game@(Game m _ s sb sw _) = pictures [ (pictures gameHorizontalLines), (pictures gameVerticalLines), (pictures stones), passButton, scoreBlack]
+    --where gameHorizontalLines = [line [(-180,0)
+    where gameHorizontalLines = [line [(fromIntegral (10 - 10*s),fromIntegral (10*s - 10 - 20*x)), (fromIntegral (20*s - 10 - 10*s),fromIntegral (10*s - 10 - 20*x))] | x <- [0..(s-1)]]
+          gameVerticalLines = [line [(fromIntegral (10*s - 10 - 20*x),fromIntegral (10 - 10*s)), (fromIntegral (10*s - 10 - 20*x),fromIntegral (-10*s + 20*s - 10))] | x <- [0..(s-1)]]
+          stones = [translate (fromIntegral (x*20 - 10*s-10)) (fromIntegral (10*s - y*20 + 10)) $ color c $ circleSolid 8 | (BoardGo.Point x y, st) <- (assocs m) , c <- [black,white], ((st == Black && c == black) ||  (st == White && c == white))]
+          passButton = translate (fromIntegral (10*s + 60)) (fromIntegral (10*s - 60)) $ color red $ rectangleSolid 80 40
+          scoreBlack = translate (fromIntegral (10*s + 20)) (fromIntegral (10*s - 60)) $ color white $ scale 0.1 0.1 $ text $ "Black : " ++ (show sb) ++ "\n" ++ " White" ++ (show sw)
 
 
 -- playTurn :: Game -> Stone -> IO()
@@ -96,12 +104,3 @@ getOppositeStoneFromLastMove (Pass st) = getOppositeStone st
 --     let a = read x
 --     let b = read y
 --     return $ BoardGo.Point a b
-
-render :: Game -> Picture
-render game@(Game m _ s sb sw _) = pictures [ (pictures gameHorizontalLines), (pictures gameVerticalLines), (pictures stones), passButton, scoreBlack]
-    --where gameHorizontalLines = [line [(-180,0)
-    where gameHorizontalLines = [line [(fromIntegral (10 - 10*s),fromIntegral (10*s - 10 - 20*x)), (fromIntegral (20*s - 10 - 10*s),fromIntegral (10*s - 10 - 20*x))] | x <- [0..(s-1)]]
-          gameVerticalLines = [line [(fromIntegral (10*s - 10 - 20*x),fromIntegral (10 - 10*s)), (fromIntegral (10*s - 10 - 20*x),fromIntegral (-10*s + 20*s - 10))] | x <- [0..(s-1)]]
-          stones = [translate (fromIntegral (x*20 - 10*s-10)) (fromIntegral (10*s - y*20 + 10)) $ color c $ circleSolid 8 | (BoardGo.Point x y, st) <- (assocs m) , c <- [black,white], ((st == Black && c == black) ||  (st == White && c == white))]
-          passButton = translate (fromIntegral (10*s + 60)) (fromIntegral (10*s - 60)) $ color red $ rectangleSolid 80 40
-          scoreBlack = translate (fromIntegral (10*s + 20)) (fromIntegral (10*s - 60)) $ color white $ scale 0.1 0.1 $ text $ "Black : " ++ (show sb) ++ "\n" ++ " White" ++ (show sw)
