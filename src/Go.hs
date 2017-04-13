@@ -13,7 +13,7 @@ playGo = do
     sizeString <- getLine
     let size = read sizeString
     let game = createGame size
-    let window = InWindow "Go Window" (20 * size + 240, 20 * size) (10, 10)
+    let window = InWindow "Go Window" (20 * size + 180, 20 * size +240) (10, 10)
     play window (dark yellow) 0 game render handleEvent (\_ y -> y)
 
 
@@ -39,12 +39,16 @@ getOppositeStoneFromLastMove (Move _ st) = getOppositeStone st
 getOppositeStoneFromLastMove (Pass st) = getOppositeStone st
 
 render :: Game -> Picture
-render game@(Game m _ s sb sw _) = pictures [ (pictures gameHorizontalLines), (pictures gameVerticalLines), (pictures stones), passButton, scoreBlack]
+render game@(Game m lm s sb sw status) = pictures [ (pictures gameHorizontalLines), (pictures gameVerticalLines), (pictures stones),  scoreBlack, scoreWhite, statusText]
     where gameHorizontalLines = [line [(fromIntegral (10 - 10*s),fromIntegral (10*s - 10 - 20*x)), (fromIntegral (20*s - 10 - 10*s),fromIntegral (10*s - 10 - 20*x))] | x <- [0..(s-1)]]
           gameVerticalLines = [line [(fromIntegral (10*s - 10 - 20*x),fromIntegral (10 - 10*s)), (fromIntegral (10*s - 10 - 20*x),fromIntegral (-10*s + 20*s - 10))] | x <- [0..(s-1)]]
           stones = [translate (fromIntegral (x*20 - 10*s-10)) (fromIntegral (10*s - y*20 + 10)) $ color c $ circleSolid 8 | (BoardGo.Point x y, st) <- (assocs m) , c <- [black,white], ((st == Black && c == black) ||  (st == White && c == white))]
-          passButton = translate (fromIntegral (10*s + 60)) (fromIntegral (10*s - 60)) $ color red $ rectangleSolid 80 40
-          scoreBlack = translate (fromIntegral (10*s + 20)) (fromIntegral (10*s - 60)) $ color white $ scale 0.1 0.1 $ text $ "Black : " ++ (show sb) ++ "\n" ++ " White" ++ (show sw)
+          --passButton = translate (fromIntegral (10*s + 60)) (fromIntegral (10*s - 60)) $ color red $ rectangleSolid 80 40
+          scoreBlack = translate 0 (fromIntegral (10*s + 40)) $ scale 0.1 0.1 $ text $ "Black's Score : " ++ (show sb)
+          scoreWhite = translate 0 (fromIntegral (10*s + 60)) $ scale 0.1 0.1 $ text $ "White's Score : " ++ (show sw)
+          statusText = if status == Alive then translate (fromIntegral (-10*s)) (fromIntegral (-10*s - 60)) $ scale 0.1 0.1 $ text $ (show $ getOppositeStone (getPiece lm)) ++ "'s turn'"
+                       else if status == Dead then translate (fromIntegral (-10*s)) (fromIntegral (-10*s - 60)) $ scale 0.1 0.1 $ text "Click on hopeless stones and enter e"
+                       else translate (fromIntegral (-10*s)) (fromIntegral (-10*s - 60)) $ scale 0.1 0.1 $ text $ getWinner game
 
 
 -- playTurn :: Game -> Stone -> IO()

@@ -16,10 +16,11 @@ module BoardGo(
     getWinner,
     findAllTerritories,
     killGame,
-    GameStatus(Alive, Dead),
+    GameStatus(Alive, Dead, Over),
     seekBoard,
     removePiece,
-    finishGame
+    finishGame,
+    getPiece
 ) where
 
 import Data.Map as Map
@@ -27,7 +28,7 @@ import Data.List as List
 
 data Point = Point Int Int deriving (Ord, Eq)
 
-data Stone = Black | White | Ko | Empty  deriving (Eq)
+data Stone = Black | White | Ko | Empty  deriving (Eq, Show)
 
 -- instance Show Stone where
 --     show Black = " b "
@@ -36,6 +37,10 @@ data Stone = Black | White | Ko | Empty  deriving (Eq)
 --     show Empty = " . "
 
 data Move = Pass Stone | Move Point Stone deriving (Eq)
+
+getPiece :: Move -> Stone
+getPiece (Pass st) = st
+getPiece (Move  _ st) = st
 
 data Game = Game {
     board :: Map Point Stone,
@@ -46,7 +51,7 @@ data Game = Game {
     status :: GameStatus
 }
 
-data GameStatus = Alive | Dead
+data GameStatus = Alive | Dead | Over deriving (Eq)
 
 killGame :: Game -> Game
 killGame game@(Game m lm s sb sw Alive) = Game m lm s (sb+1) sw Dead
@@ -219,7 +224,7 @@ findAllTerritories game@(Game _ _ boardSize _ _ _) = findAllTerritoriesOfPoints 
     where points = [(Point x y) | x <- [1..boardSize], y <- [1..boardSize]]
 
 finishGame :: Game -> Game
-finishGame game@(Game m lm s sb sw status) = Game m lm s sb' sw' status
+finishGame game@(Game m lm s sb sw status) = Game m lm s sb' sw' Over
     where sb' = sb + countSeenB t s
           sw' = sw + countSeenW t s
           t = findAllTerritories game
