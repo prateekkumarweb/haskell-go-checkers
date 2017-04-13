@@ -17,7 +17,7 @@ playCheckers = do
     play window (dark yellow) 0 game render handleEvent (\_ y -> y)
 
 render :: BoardCheckers.Game -> Picture
-render game@(Game (BoardMap board) moves player (Square x y) ) = pictures [boardBox, (pictures blackboxes), blueSquare, pictures greenSquares, (pictures pieces), (pictures kings)]
+render game@(Game (BoardMap board) moves player (Square x y) ) = pictures [boardBox, (pictures blackboxes), blueSquare, pictures greenSquares, (pictures pieces), (pictures kings), playerBox]
     where blackboxes = [translate (fromIntegral (2*x -9)*40) (fromIntegral (9-2*y)*40) $ color (greyN 0.25) $ rectangleSolid 80 80 | (Square x y,b) <- assocs board ]
           pieces = [translate (fromIntegral (2*x -9)*40) (fromIntegral (9-2*y)*40) $ color c $ circleSolid 30 | (Square x y, Piece pl pt) <- assocs board, c <- [black,red], pl == Black && c == black || pl == Red && c == red]
           kings = [translate (fromIntegral (2*x -9)*40) (fromIntegral (9-2*y)*40) $ scale 0.2 0.2 $ color white $ text "K" | (Square x y, Piece pl pt) <- assocs board, pt == King]
@@ -25,6 +25,8 @@ render game@(Game (BoardMap board) moves player (Square x y) ) = pictures [board
           blueSquare = if x /= (-1) then translate (fromIntegral (2*x -9)*40) (fromIntegral (9-2*y)*40) $ color (light blue) $ rectangleSolid 80 80
                        else translate (fromIntegral (2*x -9)*40) (fromIntegral (9-2*y)*40) $ color (dark yellow) $ rectangleSolid 80 80
           greenSquares = if x /= (-1) then [ translate (fromIntegral (2*a -9)*40) (fromIntegral (9-2*b)*40) $ color (light green) $ rectangleSolid 80 80 | move <- moves, a <- [1..8], b <- [1..8], getSource move == Square x y, getDestination move == Square a b] else []
+          playerBox = if length moves == 0 then translate 0 360 $ scale 0.2 0.2 $ text $ "Game Over " ++ (if player == Red then "Black wins" else "Red wins")
+                      else translate 0 360 $ scale 0.2 0.2 $ text $ (if player == Red then "Red's turn" else "Black's turn")
 
 handleEvent :: Event -> BoardCheckers.Game -> BoardCheckers.Game
 handleEvent (EventKey (MouseButton LeftButton) Down _ (x, y)) game@(Game board moves player _) = Game board moves player $ Square (round $ (x+360)/80) (round $ (360-y)/80)
