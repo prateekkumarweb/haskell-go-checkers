@@ -1,3 +1,7 @@
+{-|
+    This module exports all the functions required by 'playCheckers'
+    function in 'Checkers' game.
+-}
 module BoardCheckers(
     Square(Square),
     Player(Red, Black),
@@ -11,7 +15,7 @@ module BoardCheckers(
     Board(seekBoard, validMoves, playMove),
     Game(Game),
     mValidJumps,
-    startGame      
+    startGame
 ) where
 
 import Data.Map as Map

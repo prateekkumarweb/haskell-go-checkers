@@ -1,3 +1,7 @@
+{-|
+    This module has only one function 'playCheckers' that asks
+    creates a game and starts the game window.
+-}
 module Checkers(playCheckers) where
 
 import Data.Map
