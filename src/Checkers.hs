@@ -12,7 +12,6 @@ playCheckers = do
     let window = InWindow "Checkers Window" (600, 600) (10, 10)
     let s = startGame
     let moves = validMoves s Black
-    --showBoardMovesPlay s moves Black
     let game = Game s moves Black $ Square (-1) (-1)
     play window (dark yellow) 0 game render handleEvent (\_ y -> y)
 
@@ -35,7 +34,6 @@ handleEvent (EventKey (MouseButton LeftButton) Down _ (x, y)) game@(Game board m
     | otherwise = Game board moves player $ Square x' y'
     where x' = round $ (x+270)/60
           y' = round $ (270-y)/60
-
 handleEvent (EventKey (MouseButton LeftButton) Up _ (x, y)) game@(Game board moves player (Square x' y'))
     | not isValid = game
     | isJump move && length moreJumps > 0 = Game newBoard moreJumps player $ Square (-1) (-1)
@@ -55,45 +53,3 @@ getMoveFromMoves src dest moves | not foundMove && not foundJump = (Jump src des
                                 | otherwise = (March src dest, True)
                                 where foundMove = elem (March src dest) moves
                                       foundJump = elem (Jump src dest) moves
-
-validateTurn :: BoardMap -> Player -> [Move] -> IO ()
-validateTurn board p moves | length moves == 0 = declareWinner p
-                           | otherwise = playTurn board p moves
-
-playTurn :: BoardMap -> Player -> [Move] -> IO ()
-playTurn board p moves = do
-    selectedMoveNum <- (takevalidInput $ length moves)
-    let selectedMove = (moves !! ((read selectedMoveNum) - 1))
-    let newBoard = playMove board selectedMove
-    let destination = getDestination selectedMove
-    let moreJumps = mValidJumps newBoard (destination, (seekBoard newBoard destination))
-    let nextPlayer = if (p == Red) then Black else Red
-    let nextMoves = validMoves newBoard nextPlayer
-    if isJump selectedMove && length moreJumps > 0 then showBoardMovesPlay newBoard moreJumps p
-        else showBoardMovesPlay newBoard nextMoves nextPlayer
-
-takevalidInput :: Int -> IO String
-takevalidInput n = do
-    putStrLn "Please select a valid move."
-    input <- getLine
-    let selectedMoveNum = read input
-    if selectedMoveNum <= n && selectedMoveNum >= 0 then return input else takevalidInput n
-
-showBoardMovesPlay :: BoardMap -> [Move] -> Player -> IO()
-showBoardMovesPlay board moves p = do
-    putStrLn (show board)
-    putStrLn (showMoves p moves)
-    validateTurn board p moves
-
-
-showMoves :: Player -> [Move] -> String
-showMoves p moves | length moves == 0 = "No moves posssible. " ++ (show p) ++ " loses. \n"
-                | otherwise = (show p) ++ "'s move \n" ++ showPossibleMoves 1 moves
-
-showPossibleMoves :: Int -> [Move] -> String
-showPossibleMoves _ [] = ""
-showPossibleMoves moveNum (x:xs) = show moveNum ++ " " ++ show x ++ showPossibleMoves (moveNum+1) xs
-
-declareWinner :: Player -> IO ()
-declareWinner p | p == Red = putStrLn ("Black wins\n")
-                | otherwise = putStrLn ("Red wins\n")

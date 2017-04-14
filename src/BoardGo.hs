@@ -7,8 +7,6 @@ module BoardGo(
     Stone(Black, White),
     Point(Point),
     findTrappedGroup,
-    -- getBlackScore,
-    -- getWhiteScore,
     removeKo,
     playPass,
     Move(Pass, Move),
@@ -30,12 +28,6 @@ data Point = Point Int Int deriving (Ord, Eq)
 
 data Stone = Black | White | Ko | Empty  deriving (Eq, Show)
 
--- instance Show Stone where
---     show Black = " b "
---     show White = " w "
---     show Ko = " k "
---     show Empty = " . "
-
 data Move = Pass Stone | Move Point Stone deriving (Eq)
 
 getPiece :: Move -> Stone
@@ -56,12 +48,6 @@ data GameStatus = Alive | Dead | Over deriving (Eq)
 killGame :: Game -> Game
 killGame game@(Game m lm s sb sw Alive) = Game m lm s (sb+1) sw Dead
 killGame game = game
-
--- getBlackScore :: Game -> Int
--- getBlackScore (Game _ _ _ b _ _) = b
-
--- getWhiteScore :: Game -> Int
--- getWhiteScore (Game _ _ _ _ w _) = w
 
 createGame :: Int -> Game
 createGame size = Game{
@@ -180,7 +166,7 @@ findTrappedGroup game@(Game m move@(Move pt st) boardSize _ _ _) point@(Point x 
           right = Point (x+1) y
           left = Point (x-1) y
 
-data Status = Seen | Unseen | SeenW | SeenB | None deriving (Eq, Show)
+data Status = Seen | Unseen | SeenW | SeenB | None deriving (Eq)
 
 findTerritory :: Game -> Point -> Stone -> ((Map Point Status), [Maybe Point]) -> ((Map Point Status), [Maybe Point])
 findTerritory game@(Game _ _ boardSize _ _ _) point@(Point x y) stone (m, points)
@@ -269,27 +255,6 @@ checkIfTrapped game p st = not $ elem Nothing (findTrappedGroup game p st [])
 checkIfNothing :: (Maybe Point) -> Bool
 checkIfNothing Nothing = True
 checkIfNothing (Just point) = False
-
--- instance Show Game where
---   show = mBShow
---
--- mBShow :: Game -> String
--- mBShow game@(Game m _ s _ _) = "   1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19\n" ++ showRows 1 (assocs m)
---
--- showRows :: Int -> [(Point, Stone)] -> String
--- showRows _ [] = ""
--- showRows rowNum rows = show rowNum ++ " " ++ (showRow $ (take 19 rows)) ++ (showRows (rowNum+1) (drop 19 rows))
---
--- showRow :: [(Point, Stone)] -> [Char]
--- showRow ((Point r c, piece):rest) = rowStr ++ "\n"
---   where
---       rowStr = withEmptySpaces ((Point r c, piece):rest)
---
--- withEmptySpaces :: [(Point, Stone)] -> [Char]
--- withEmptySpaces row = concat $ ((intersperse "" (List.map show pieces)))
---   where
---       pieces = List.map snd row
-
 
 getWinner :: Game -> String
 getWinner game@(Game _ _ _ sb sw _) | sb > sw = "Black wins."

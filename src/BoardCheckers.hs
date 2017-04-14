@@ -1,7 +1,6 @@
 module BoardCheckers(
     startGame,
     Player(Red, Black),
-    --BoardMap,
     Move(March, Jump),
     isJump,
     Board(seekBoard, validMoves, playMove),
@@ -26,10 +25,6 @@ instance Show Player where
 
 data Move =  Jump Square Square | March Square Square deriving (Eq)
 
-instance Show Move where
-    show (Jump (Square x1 y1) (Square x2 y2)) = " Jump (" ++ show x1 ++ ", " ++ show y1 ++ ") (" ++ show x2 ++ ", " ++ show y2 ++ ")\n"
-    show (March (Square x1 y1) (Square x2 y2)) = " March (" ++ show x1 ++ ", " ++ show y1 ++ ") (" ++ show x2 ++ ", " ++ show y2 ++ ")\n"
-
 isJump :: Move -> Bool
 isJump (Jump _ _ ) = True
 isJump (March _ _) = False
@@ -42,7 +37,7 @@ getSource :: Move -> Square
 getSource (March s _) = s
 getSource (Jump s _) = s
 
-data Square = Square Int Int deriving (Show)
+data Square = Square Int Int --deriving (Show)
 
 instance Ord Square where
     (Square a b) <= (Square c d) = a < c || (a == c && b <= d)
@@ -52,9 +47,6 @@ instance Eq Square where
 
 data PieceType = Pawn | King deriving (Eq)
 
-instance Show PieceType where
-    show Pawn = " "
-    show King = "K"
 
 data Piece = Empty | Piece Player PieceType deriving (Eq)
 
@@ -66,13 +58,9 @@ isBlack :: Piece -> Bool
 isBlack Empty = False
 isBlack (Piece pl _) = pl == Black
 
-instance Show Piece where
-    show Empty = "   "
-    show (Piece player piecetype) = show player ++ show piecetype
+data BoardMap = BoardMap (Map Square Piece)
 
-data BoardMap = BoardMap (Map Square Piece) -- deriving (Show)
-
-data Game = Game BoardMap [Move] Player Square --
+data Game = Game BoardMap [Move] Player Square
 
 class Board board where
     seekBoard :: board -> Square -> Piece
@@ -177,26 +165,3 @@ initialPieceAtSquare :: Square -> Piece
 initialPieceAtSquare (Square x y) | y <= 3 = (Piece Red Pawn)
                                   | y >= 6 = (Piece Black Pawn)
                                   | otherwise = Empty
-
--- Show for Board -----------------------------------------------------
-instance Show BoardMap where
-    show = mBShow
-
-mBShow :: BoardMap -> String
-mBShow (BoardMap squaresToPieces) = "   1  2  3  4  5  6  7  8\n" ++ showRows 1 (assocs squaresToPieces)
-
-showRows :: Int -> [(Square, Piece)] -> String
-showRows _ [] = ""
-showRows rowNum rows = show rowNum ++ " " ++ (showRow $ (take 4 rows)) ++ (showRows (rowNum+1) (drop 4 rows))
-
-showRow :: [(Square, Piece)] -> [Char]
-showRow ((Square r c, piece):rest) = case mod r 2 of
-    0 -> rowStr ++ "___\n"
-    1 ->  "___" ++ rowStr ++ "\n"
-    where
-        rowStr = withEmptySpaces ((Square r c, piece):rest)
-
-withEmptySpaces :: [(Square, Piece)] -> [Char]
-withEmptySpaces row = concat $ ((intersperse "___" (List.map show pieces)))
-    where
-        pieces = List.map snd row
