@@ -17,7 +17,6 @@ playGo = do
         let window = InWindow "Go Window" (20 * size + 180, 20 * size +240) (10, 10)
         play window (dark yellow) 0 game render handleEvent (\_ y -> y)
 
-
 handleEvent :: Event -> Game -> Game
 handleEvent (EventKey (MouseButton LeftButton) Down _ (x, y)) game@(Game _ lm s _ _ Alive)
     | validMove game p st = playMove (removeKo game) p st
