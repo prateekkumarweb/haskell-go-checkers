@@ -24,10 +24,10 @@ description:         This is an implementation fo Go and Checkers game in haskel
 homepage:            https://github.com/prateekkumarweb/haskell-go-checkers
 
 -- The license under which the package is released.
--- license:
+license:             MIT
 
 -- The file containing the license text.
--- license-file:        LICENSE
+license-file:        LICENSE
 
 -- The package author(s).
 author:              Prateek Kumar, Vaibhav Sinha, Anurag Singh
@@ -69,3 +69,8 @@ executable haskell-go-checkers
 
   -- Base language which the package is written in.
   default-language:    Haskell2010
+
+source-repository this
+  type:                git
+  location:            https://github.com/prateekkumarweb/haskell-go-checkers
+  tag:                 v0.1.0.0
