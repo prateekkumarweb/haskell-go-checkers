@@ -16,7 +16,9 @@ version:             0.1.0.0
 synopsis:            Go and Checkers game in Haskell
 
 -- A longer description of the package.
--- description:
+description:         This is an implementation fo Go and Checkers game in haskell using GLOSS for GUI.
+                     For more rules of Go visit https://www.britgo.org/intro/intro2.html.
+                     For more rules of Checkers visit https://www.thespruce.com/play-checkers-using-standard-rules-409287.
 
 -- URL for the project homepage or repository.
 homepage:            https://github.com/prateekkumarweb/haskell-go-checkers
@@ -60,7 +62,7 @@ executable haskell-go-checkers
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.8 && <4.10, containers >=0.5 && <0.6, gloss ==1.11.*
+  build-depends:       base >=4.9 && <4.10, containers >=0.5 && <0.6, gloss ==1.11.*
 
   -- Directories containing source files.
   hs-source-dirs:      src

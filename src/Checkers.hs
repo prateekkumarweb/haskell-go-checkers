@@ -1,6 +1,4 @@
-module Checkers(
-    playCheckers
-) where
+module Checkers(playCheckers) where
 
 import Data.Map
 import BoardCheckers

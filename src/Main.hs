@@ -1,8 +1,12 @@
+{-|
+    This module contains 'main' fuction.
+-}
 module Main(main) where
 
 import Go
 import Checkers
 
+-- | The 'main' functions asks user whether to play 'Go' or 'Checkers' and calls 'playGo' and 'playCheckers' respectively.
 main :: IO()
 main = do
     putStrLn $ "Enter 1 to play Go"
