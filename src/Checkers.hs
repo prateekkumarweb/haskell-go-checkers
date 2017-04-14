@@ -25,11 +25,15 @@ render game@(Game (BoardMap board) moves player (Square x y) ) = pictures [board
           blueSquare = if x /= (-1) then translate (fromIntegral (2*x -9)*40) (fromIntegral (9-2*y)*40) $ color (light blue) $ rectangleSolid 80 80
                        else translate (fromIntegral (2*x -9)*40) (fromIntegral (9-2*y)*40) $ color (dark yellow) $ rectangleSolid 80 80
           greenSquares = if x /= (-1) then [ translate (fromIntegral (2*a -9)*40) (fromIntegral (9-2*b)*40) $ color (light green) $ rectangleSolid 80 80 | move <- moves, a <- [1..8], b <- [1..8], getSource move == Square x y, getDestination move == Square a b] else []
-          playerBox = if length moves == 0 then translate 0 360 $ scale 0.2 0.2 $ text $ "Game Over " ++ (if player == Red then "Black wins" else "Red wins")
+          playerBox = if length moves == 0 then translate (-180) 360 $ scale 0.2 0.2 $ text $ "Game Over " ++ (if player == Red then "Black wins" else "Red wins")
                       else translate 0 360 $ scale 0.2 0.2 $ text $ (if player == Red then "Red's turn" else "Black's turn")
 
 handleEvent :: Event -> BoardCheckers.Game -> BoardCheckers.Game
-handleEvent (EventKey (MouseButton LeftButton) Down _ (x, y)) game@(Game board moves player _) = Game board moves player $ Square (round $ (x+360)/80) (round $ (360-y)/80)
+handleEvent (EventKey (MouseButton LeftButton) Down _ (x, y)) game@(Game board moves player _)
+    | x' < 1 || x' > 8 || y' < 1 || y' > 8 = game
+    | otherwise = Game board moves player $ Square x' y'
+    where x' = round $ (x+360)/80
+          y' = round $ (360-y)/80
 handleEvent (EventKey (MouseButton LeftButton) Up _ (x, y)) game@(Game board moves player (Square x' y'))
     | not isValid = game
     | isJump move && length moreJumps > 0 = Game newBoard moreJumps player $ Square (-1) (-1)
