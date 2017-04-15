@@ -31,7 +31,7 @@ render game@(Game (BoardMap board) moves player (Square x y) ) = pictures [board
           -- | Pieces on board
           pieces = [translate (fromIntegral (2*x -9)*30) (fromIntegral (9-2*y)*30) $ color c $ circleSolid 24 | (Square x y, Piece pl pt) <- assocs board, c <- [black,red], pl == Black && c == black || pl == Red && c == red]
           -- | Kings on board
-          kings = [translate (fromIntegral (2*x -9)*30) (fromIntegral (9-2*y)*30) $ scale 0.2 0.2 $ color white $ text "K" | (Square x y, Piece pl pt) <- assocs board, pt == King]
+          kings = [translate (fromIntegral (2*x -9)*30) (fromIntegral (9-2*y)*30) $ scale 0.17 0.17 $ color white $ text "K" | (Square x y, Piece pl pt) <- assocs board, pt == King]
           -- | Surrounding boardBox
           boardBox = color white $ rectangleSolid 480 480
           -- | Clicked Blue Square
@@ -40,8 +40,8 @@ render game@(Game (BoardMap board) moves player (Square x y) ) = pictures [board
           -- | Dest greenSquares
           greenSquares = if x /= (-1) then [ translate (fromIntegral (2*a -9)*30) (fromIntegral (9-2*b)*30) $ color (light green) $ rectangleSolid 60 60 | move <- moves, a <- [1..8], b <- [1..8], getSource move == Square x y, getDestination move == Square a b] else []
           -- | Display turn and log
-          playerBox = if length moves == 0 then translate 0 270 $ scale 0.2 0.2 $ text $ "Game Over " ++ (if player == Red then "Black wins" else "Red wins")
-                      else translate 0 270 $ scale 0.2 0.2 $ text $ (if player == Red then "Red's turn" else "Black's turn")
+          playerBox = if length moves == 0 then translate (-100) 270 $ scale 0.2 0.2 $ text $ "Game Over " ++ (if player == Red then "Black wins" else "Red wins")
+                      else translate (-100) 270 $ scale 0.2 0.2 $ text $ (if player == Red then "Red's turn" else "Black's turn")
 
 -- | Takes an event and 'Game' and returns the board after the result of this event
 handleEvent :: Event -> BoardCheckers.Game -> BoardCheckers.Game
