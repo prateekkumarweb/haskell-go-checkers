@@ -10,7 +10,7 @@ name:                haskell-go-checkers
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.0.0
+version:             0.1.1.0
 
 -- A short (one-line) description of the package.
 synopsis:            Go and Checkers game in Haskell
@@ -30,7 +30,7 @@ license:             MIT
 license-file:        LICENSE
 
 -- The package author(s).
-author:              Prateek Kumar, Vaibhav Sinha, Anurag Singh
+author:              Prateek Kumar, Vaibhav Sinha
 
 -- An email address to which users can send suggestions, bug reports, and
 -- patches.
@@ -45,7 +45,7 @@ build-type:          Simple
 
 -- Extra files to be distributed with the package, such as examples or a
 -- README.
-extra-source-files:  README.md
+extra-source-files:  README.md ChangeLog.md Makefile
 
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version:       >=1.10
@@ -56,7 +56,7 @@ executable haskell-go-checkers
   main-is:             Main.hs
 
   -- Modules included in this executable, other than Main.
-  -- other-modules:
+  other-modules:       Go Checkers BoardGo BoardCheckers
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
@@ -70,7 +70,6 @@ executable haskell-go-checkers
   -- Base language which the package is written in.
   default-language:    Haskell2010
 
-source-repository this
+source-repository head
   type:                git
   location:            https://github.com/prateekkumarweb/haskell-go-checkers
-  tag:                 v0.1.0.0
