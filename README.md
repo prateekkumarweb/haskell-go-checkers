@@ -1,5 +1,5 @@
 # haskell-go-checkers
-Go and checkers game in Haskell
+Implementation of Go and Checkers game in Haskell
 
 ## Instructions
 * Requirements : **ghc, cabal**
